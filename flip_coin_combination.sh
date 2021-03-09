@@ -1,6 +1,8 @@
-#!/bin/bash 
+#!/bin/bash
 declare -a triplet_array
+declare -a sorted_triplet
 declare -a doublet_array
+declare -a sorted_doublet
 declare -a singlet_array
 declare -A singlet_dictionary=( [1]="Heads" [2]="Tails" )
 declare -A doublet_dictionary=( [1]="H H" [2]="H T" [3]="T T" [4]="T H" )
@@ -27,49 +29,63 @@ do
         triplet_array[$triplet_substitute]=$(( triplet_array[$triplet_substitute] + 1 ))
 done
 
-
 if [ ${singlet_array[1]} -gt ${singlet_array[2]} ]
 then
-	echo -e "\nHEADS WON BY $(( ( ${singlet_array[1]} * 100 ) / ( ${singlet_array[2]} + ${singlet_array[1]} ) )) %"
+	echo -e "\nHEADS WON BY $(( ( ${singlet_array[1]} * 100 ) / ( ${singlet_array[2]} + ${singlet_array[1]} ) )) %\n"
 else
-	echo -e "\nTAILS WON BY $(( ( ${singlet_array[2]} * 100 ) / ( ${singlet_array[1]} + ${singlet_array[1]} ) )) %"
+	temporary_transfer=${singlet_array[1]}
+	singlet_array[1]=${singlet_array[2]}
+	singlet_array[2]=$temporary_transfer
+	echo -e "\nTAILS WON BY $(( ( ${singlet_array[1]} * 100 ) / ( ${singlet_array[1]} + ${singlet_array[1]} ) )) %\n"
 fi
-double_greatest=0
 sum_double=0
-test_retuner=0
-for test in ${!doublet_array[@]}
+for assigner in ${!doublet_array[@]}
 do
-	sum_double=$(( sum_double + ${doublet_array[$test]} ))
-        if [ ${doublet_array[$test]} -ge $double_greatest ]
-        then
-                double_greatest=${doublet_array[$test]}
-		test_returner=$test
-        fi
+	sorted_doublet[$assigner]=${doublet_array[$assigner]}
+	sum_double=$(( sum_double + ${doublet_array[$assigner]} ))
 done
-echo -e "\n"
-for double in ${!doublet_array[@]}
+for((first_counter=${#sorted_doublet[@]};first_counter>=0; first_counter--));
+        do
+
+                for((second_counter=1;second_counter<=$first_counter; second_counter++));
+                do
+                        if [[ ${sorted_doublet[second_counter-1]} -lt ${sorted_doublet[second_counter]} ]];
+                        then
+                                temporary_storage=${sorted_doublet[second_counter-1]}
+                                sorted_doublet[second_counter - 1]=${sorted_doublet[second_counter]}
+                                sorted_doublet[second_counter]=$temporary_storage
+                        fi
+                done
+        done
+for print in ${!doublet_array[@]}
 do
-        echo "${doublet_dictionary[$double]} -- ${doublet_array[$double]} times"
+	echo -e "${doublet_dictionary[$print]} -- ${doublet_array[$print]} times"
 done
+echo -e "\nTHE COMBINATION WON BY $(( ( ${sorted_doublet[1]} * 100 ) / $sum_double )) %\n"
 
-echo -e "\n${doublet_dictionary[$test_returner]} won by $(( ( double_greatest * 100 ) / sum_double )) %"
 
-triple_greatest=0
 sum_triple=0
-test_retruner=0
-for test in ${!triplet_array[@]}
+for assigner in ${!triplet_array[@]}
 do
-        sum_triple=$(( sum_triple + ${triplet_array[$test]} ))
-        if [ ${triplet_array[$test]} -ge $triple_greatest ]
-        then
-                triple_greatest=${triplet_array[$test]}
-                test_returner=$test
-        fi
+        sorted_triplet[$assigner]=${triplet_array[$assigner]}
+        sum_triple=$(( sum_triple + ${triplet_array[$assigner]} ))
 done
-echo -e "\n"
-for triple in ${!triplet_array[@]}
-do
-        echo "${triplet_dictionary[$triple]} -- ${triplet_array[$triple]} times"
-done
+for((first_counter=${#sorted_triplet[@]};first_counter>=0; first_counter--));
+        do
 
-echo -e "\n${triplet_dictionary[$test_returner]} won by $(( ( triple_greatest * 100 ) / sum_triple )) %"
+                for((second_counter=1;second_counter<=$first_counter; second_counter++));
+                do
+                        if [[ ${sorted_triplet[second_counter-1]} -lt ${sorted_triplet[second_counter]} ]];
+                        then
+                                temporary_storage=${sorted_triplet[second_counter-1]}
+                                sorted_triplet[second_counter - 1]=${sorted_triplet[second_counter]}
+                                sorted_triplet[second_counter]=$temporary_storage
+                        fi
+                done
+        done
+
+for print in ${!triplet_array[@]}
+do
+        echo -e "${triplet_dictionary[$print]} -- ${triplet_array[$print]} times"
+done
+echo -e "\nTHE COMBINATION WON BY $(( ( sorted_triplet[1] * 100 ) / sum_triple )) %\n"
